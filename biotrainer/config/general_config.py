@@ -19,7 +19,7 @@ def general_config(protocol: Protocol) -> Tuple[ConfigKey, List[ConfigOption]]:
                      default=str(get_device().type),
                      constraints=ConfigConstraints(
                          type=str,
-                         allowed_values=["cpu", "mps"] + [f"cuda:{i}" for i in
+                         allowed_values=["cpu", "mps", "auto"] + [f"cuda:{i}" for i in
                                                           range(torch.cuda.device_count())] + ["cuda"]
                          if torch.cuda.is_available() else [])),
         ConfigOption(name="interaction",

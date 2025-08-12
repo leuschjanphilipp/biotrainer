@@ -54,8 +54,6 @@ class CNN(BiotrainerModel):
                 self.dropout,
                 self.conv2
             )
-        print(self.net)
-        print("lr: ", kwargs["learning_rate"])
 
     def forward(self, x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         """

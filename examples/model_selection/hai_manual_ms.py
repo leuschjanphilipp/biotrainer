@@ -1,15 +1,15 @@
 import os
 import sys
-#sys.path.insert(0, "biotrainer")
+sys.path.insert(0, "biotrainer")
 import optuna
-from ...biotrainer.protocols import Protocol
-from ...biotrainer.utilities.cli import train
+from biotrainer.protocols import Protocol
+from biotrainer.utilities.cli import train
 
 config = {
     "input_file": "data/sampled_3Dii.fasta",
     "protocol": Protocol.residue_to_class.name,
     "model_choice": "CNN",
-    "device": "mps",
+    "device": "cuda",
     "optimizer_choice": "adam",
     "learning_rate": 1e-3,
     "loss_choice": "cross_entropy_loss",
@@ -20,7 +20,7 @@ config = {
     "cross_validation_config": {
         "method": "hold_out"
     },
-    "embeddings_file": "path/to/file/residue_to_class/ProstT5/embeddings_file_ProstT5.h5",
+    "embeddings_file": "data/embeddings_file_ProstT5.h5",
     #"embedder_name": "RostLab/ProstT5",
     "model_params": {
             "dropout_rate": 0.15,
@@ -32,7 +32,6 @@ config = {
 }
 
 def objective(trial):
-    config = config.copy()
     config["output_dir"] = f"optuna_trials/{trial.number}"
 
     learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True)
@@ -62,10 +61,13 @@ os.makedirs("optuna_trials", exist_ok=True)
 storage = f'sqlite:///optuna_trials/study.db'
 
 sampler = optuna.samplers.TPESampler(seed=42)
-study = optuna.create_study(direction="maximize", sampler=sampler, storage=storage, load_if_exists=True)
+study = optuna.create_study(study_name="3Dii",
+                            direction="maximize", 
+                            sampler=sampler, 
+                            storage=storage, 
+                            load_if_exists=True)
 
-study.optimize(objective, n_trials=30)
-
+study.optimize(objective, n_trials=10)
 
 print("Best trial:")
 print(study.best_trial)
