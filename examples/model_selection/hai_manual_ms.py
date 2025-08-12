@@ -32,44 +32,55 @@ config = {
 }
 
 def objective(trial):
-    config["output_dir"] = f"optuna_trials/{trial.number}"
+    config["output_dir"] = f"optuna/{study_name}/trial_{trial.number}"
 
     learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True)
     config["learning_rate"] = learning_rate
 
+    model_choice = trial.suggest_categorical("model_choice", ["CNN", "FNN"])
+    config["model_choice"] = model_choice
+
     dropout_rate = trial.suggest_float("dropout_rate", 0.1, 0.5)
     n_layers = trial.suggest_int("n_layers", 1, 3)
-    kernel_sizes = [(trial.suggest_categorical(f"kernel_size_{i}", [3, 5, 7]), 1) for i in range(n_layers)]
-    padding = [(k[0] // 2, 0) for k in kernel_sizes]
     hidden_dims = [trial.suggest_int(f"hidden_dim_{i}", 32, 512) for i in range(n_layers-1)]
-    last_layer_FNN = trial.suggest_categorical("last_layer_FNN", [True, False])
 
     config["model_params"] = {
         "dropout_rate": dropout_rate,
-        "kernel_sizes": kernel_sizes,
-        "padding": padding,
         "hidden_dims": hidden_dims,
-        "last_layer_FNN": last_layer_FNN
     }
 
-    print(config)
+    if model_choice =="CNN":
+        #additional CNN parameters
+        kernel_sizes = [(trial.suggest_categorical(f"kernel_size_{i}", [3, 5, 7]), 1) for i in range(n_layers)]
+        padding = [(k[0] // 2, 0) for k in kernel_sizes]
+        last_layer_FNN = False # trial.suggest_categorical("last_layer_FNN", [True, False])
+        config["model_params"].update({
+            "kernel_sizes": kernel_sizes,
+            "padding": padding,
+            "last_layer_FNN": last_layer_FNN
+        })
+
     res = train(config)
     return res["training_results"]["hold_out"]["best_training_epoch_metrics"]["training"]["accuracy"]
 
+study_name = "3Dii"
 
-os.makedirs("optuna_trials", exist_ok=True)
-storage = f'sqlite:///optuna_trials/study.db'
+os.makedirs("optuna", exist_ok=True)
+os.makedirs(f"optuna/{study_name}", exist_ok=True)
+storage = f'sqlite:///optuna/{study_name}/study.db'
 
-sampler = optuna.samplers.TPESampler(seed=42)
-study = optuna.create_study(study_name="3Dii",
-                            direction="maximize", 
+sampler = optuna.samplers.TPESampler(seed=42) # since its supprts ciondtitional sampling
+
+study = optuna.create_study(study_name=study_name,
+                            direction="maximize",
                             sampler=sampler, 
                             storage=storage, 
                             load_if_exists=True)
 
-study.optimize(objective, n_trials=10)
+study.optimize(objective, n_trials=5)
 
-print("Best trial:")
+
+print("\nBest trial:")
 print(study.best_trial)
 print("Best value:", study.best_value)
 print("Best params:", study.best_params)
