@@ -95,5 +95,16 @@ def model_config(protocol: Protocol) -> Tuple[ConfigKey, List[ConfigOption]]:
             constraints=ConfigConstraints(
                 type=bool,
             )
+        ),
+        ConfigOption(
+            name="model_params",
+            description="Define custom model parameters (layers, kernel sizes, etc.) as a dictionary",
+            category=model_category,
+            required=False,
+            default={},
+            allow_hyperparameter_optimization=True,
+            constraints=ConfigConstraints(
+                type=dict
+            )
         )
     ]
