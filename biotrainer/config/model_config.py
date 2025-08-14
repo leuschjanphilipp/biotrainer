@@ -101,10 +101,29 @@ def model_config(protocol: Protocol) -> Tuple[ConfigKey, List[ConfigOption]]:
             description="Define custom model parameters (layers, kernel sizes, etc.) as a dictionary",
             category=model_category,
             required=False,
-            default={},
+            default={"dropout_rate": 0.25, 
+                     "hidden_dims": [32],
+                     "kernel_sizes": [(7, 1), (7, 1)],
+                     "padding": [(3, 0), (3, 0)],
+                     "last_layer_FNN": False},
             allow_hyperparameter_optimization=True,
             constraints=ConfigConstraints(
                 type=dict
             )
-        )
+        ),
+        ConfigOption(
+            name="model_selection",
+            description="Define custom model selection parameters for optuna (e.g., study name, direction) as a dictionary",
+            category=model_category,
+            required=False,
+            default={"study_name": None, 
+                     "n_trials": 10, 
+                     "direction": "maximize", 
+                     "seed": 42,
+                     "objective_metric": "accuracy"},
+            allow_hyperparameter_optimization=False,
+            constraints=ConfigConstraints(
+                type=dict
+            )
+        ),
     ]

@@ -10,33 +10,22 @@ class FNN(BiotrainerModel):
             self, 
             n_classes: int, 
             n_features: int,
-            bottleneck_dim: int = 32, 
-            dropout_rate: float = 0.25,
             **kwargs
     ):
         super(FNN, self).__init__()
-        if "model_params" in kwargs:
-            model_params = kwargs["model_params"]
-            dropout_rate = model_params.get("dropout_rate", dropout_rate)
-            hidden_dims = model_params.get("hidden_dims", [32])
+        model_params = kwargs["model_params"]
+        dropout_rate = model_params["dropout_rate"]
+        hidden_dims = model_params["hidden_dims"]
 
-            dims = [n_features] + hidden_dims + [n_classes]
+        dims = [n_features] + hidden_dims + [n_classes]
 
-            layers = []
-            for i in range(len(dims)-1):
-                layers.append(nn.Linear(dims[i], dims[i + 1]))
-                layers.append(nn.ReLU())
-                layers.append(nn.Dropout(dropout_rate))
+        layers = []
+        for i in range(len(dims)-1):
+            layers.append(nn.Linear(dims[i], dims[i + 1]))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(dropout_rate))
 
-            self.classifier = nn.Sequential(*layers)
-
-        else:
-            self.classifier = nn.Sequential(
-                nn.Linear(n_features, bottleneck_dim),  # n_features x 32
-                nn.ReLU(),
-                nn.Dropout(dropout_rate),
-                nn.Linear(bottleneck_dim, n_classes)
-            )
+        self.classifier = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         """

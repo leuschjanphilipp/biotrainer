@@ -12,6 +12,7 @@ from .executer import parse_config_file_and_execute_run
 from ..trainers import Pipeline
 from ..inference import Inferencer
 from ..autoeval import autoeval_pipeline
+from ..utilities import model_selection
 from ..embedders import get_embedding_service
 from ..input_files import convert_deprecated_fastas, read_FASTA
 
@@ -39,6 +40,14 @@ def train_with_custom_pipeline(config: Union[str, Path, Dict[str, Any]],
     """
     return parse_config_file_and_execute_run(config, custom_pipeline=custom_pipeline)
 
+@app.command
+def train_with_model_selection(config: Dict[str, Any]):
+    """
+    Entry point for model selection using Optuna.
+
+    @param config: Biotrainer configuration file path or config dict
+    """
+    model_selection.model_selection(config)
 
 @app.command
 def predict(training_output_file: Union[str, Path], model_input: str,

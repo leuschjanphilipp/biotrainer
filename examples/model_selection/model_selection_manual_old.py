@@ -5,6 +5,7 @@ import optuna
 from biotrainer.protocols import Protocol
 from biotrainer.utilities.cli import train
 
+
 config = {
     "input_file": "data/sampled_3Dii.fasta",
     "protocol": Protocol.residue_to_class.name,
@@ -49,9 +50,9 @@ def objective(trial):
         "hidden_dims": hidden_dims,
     }
 
-    if model_choice =="CNN":
+    if model_choice == "CNN":
         #additional CNN parameters
-        kernel_sizes = [(trial.suggest_categorical(f"kernel_size_{i}", [3, 5, 7]), 1) for i in range(n_layers)]
+        kernel_sizes = [(trial.suggest_categorical(f"kernel_size_{i}", [5, 7, 9, 11]), 1) for i in range(n_layers)]
         padding = [(k[0] // 2, 0) for k in kernel_sizes]
         last_layer_FNN = False # trial.suggest_categorical("last_layer_FNN", [True, False])
         config["model_params"].update({
@@ -61,7 +62,7 @@ def objective(trial):
         })
 
     res = train(config)
-    return res["training_results"]["hold_out"]["best_training_epoch_metrics"]["training"]["accuracy"]
+    return res["training_results"]["hold_out"]["best_training_epoch_metrics"]["validation"]["accuracy"]
 
 study_name = "3Dii"
 
@@ -69,7 +70,7 @@ os.makedirs("optuna", exist_ok=True)
 os.makedirs(f"optuna/{study_name}", exist_ok=True)
 storage = f'sqlite:///optuna/{study_name}/study.db'
 
-sampler = optuna.samplers.TPESampler(seed=42) # since its supprts ciondtitional sampling
+sampler = optuna.samplers.TPESampler(seed=42) # since its supports conditional sampling
 
 study = optuna.create_study(study_name=study_name,
                             direction="maximize",
@@ -77,7 +78,7 @@ study = optuna.create_study(study_name=study_name,
                             storage=storage, 
                             load_if_exists=True)
 
-study.optimize(objective, n_trials=5)
+study.optimize(objective, n_trials=30,)
 
 
 print("\nBest trial:")
